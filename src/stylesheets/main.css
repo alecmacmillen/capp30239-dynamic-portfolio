@@ -5,10 +5,24 @@ a {
 
 html,
 body {
-  background: #D6D6CE;
+  /*background: #D6D6CE;*/
   font-family: Verdana, Geneva, sans-serif;
   height: 100%;
-  margin: 0;
+  margin: 10px;
   padding: 0;
   width: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Blinker';
+}
+
+p, li {
+    font-family: 'Blinker';
+    font-size: 14px;
+}
+
+#viz1 {
+    height: 600px;
+    width: 600px;
 }

@@ -1,13 +1,65 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Dynamic Portfolio</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  </head>
+<head>
+  <title>Dynamic Portfolio</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="stylesheet" href="./src/stylesheets/main.css" />
+  <link href="https://fonts.googleapis.com/css?family=Blinker&display=swap" rel="stylesheet">
+
+</head>
   <body>
-    <h1>Alec MacMillen's CAPP 30239 dynamic portfolio</h1>
+    <h1>CAPP 30239 - Dynamic Portfolio</h1>
+    <h3>Alec MacMillen</h3>
+    <p>The purpose of this visualization portfolio is to explore electoral, financial, and ideological data
+    germane to US House of Representatives elections in the state of Texas.</p>
+
+    <h4>Visualization 1: County-level results by year</h4>
+    <p>TO-DO:</p>
+    <ul>
+      <li>Add more prior years</li>
+      <li>Fix cursor to make hovering easier</li>
+      <li>Convert x-axis to years</li>
+      <li>Add legend, axis titles, format axes, title/subtitle/source</li>
+      <li>Add drop-down menu to highlight county subsets</li>
+      <li>Encode line width by population? (May be too tricky as pop changes over time)</li>
+    </ul>
+    <div id="viz1"></div>
+
+    <h4>Visualization 2: County-level results by year and demographic</h4>
+    <p>TO-DO:</p>
+    <ul>
+      <li>Encode dot size by population</li>
+      <li>Switch ordinal color encoding to diverging continuous for vote share %age</li>
+      <li>Add shape encoding for winning county</li>
+      <li>Add tooltip hover with county name, population, % Democratic</li>
+      <li>Add data for previous cycles</li>
+      <li>Add slider to allow user to select cycle</li>
+      <li>Add legend, axis titles, format axes, title/subtitle/source</li>
+    </ul>
+    <div id="viz2"></div>
+
+    <h4>Visualization 3: Partisan composition of state delegation to US House</h4>
+    <p>TO-DO:</p>
+    <ul>
+      <li>Get it to render properly!</li>
+      <li>Color legislator bubbles by party</li>
+      <li>Add tooltip for legislator detail (district, party, name)</li>
+      <li>Add interactivity allowing slider or dropdown to select session</li>
+    </ul>
+    <div id="viz3"></div>
+
+    <h4>Visualization 4: Composition of campaign contributions</h4>
+    <div id="viz4"></div>
+    <p>Data still in processing</p>
+
+
+
+
     <div id="app"></div>
-    <script src="bundle.js"></script>
+
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="src/app.js"></script>
+    <!--<script src="bundle.js"></script>-->
   </body>
 </html>
