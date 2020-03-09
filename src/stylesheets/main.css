@@ -13,8 +13,21 @@ body {
   width: 100%;
 }
 
+label, select, option {
+    font-family: Verdana, Geneva, sans-serif;
+    font-size: 12px;
+}
+
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Blinker';
+}
+
+h5 {
+    text-align: center;
+}
+
+.sequence {
+    font-weight: 700;
 }
 
 p, li {
@@ -22,7 +35,3 @@ p, li {
     font-size: 14px;
 }
 
-#viz1 {
-    height: 600px;
-    width: 600px;
-}

@@ -4,54 +4,134 @@
   <title>Dynamic Portfolio</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
   <link rel="stylesheet" href="./src/stylesheets/main.css" />
   <link href="https://fonts.googleapis.com/css?family=Blinker&display=swap" rel="stylesheet">
 
 </head>
-  <body>
-    <h1>CAPP 30239 - Dynamic Portfolio</h1>
-    <h3>Alec MacMillen</h3>
-    <p>The purpose of this visualization portfolio is to explore electoral, financial, and ideological data
-    germane to US House of Representatives elections in the state of Texas.</p>
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col-1">
 
-    <h4>Visualization 1: County-level results by year</h4>
-    <p>TO-DO:</p>
-    <ul>
-      <li>Add more prior years</li>
-      <li>Fix cursor to make hovering easier</li>
-      <li>Convert x-axis to years</li>
-      <li>Add legend, axis titles, format axes, title/subtitle/source</li>
-      <li>Add drop-down menu to highlight county subsets</li>
-      <li>Encode line width by population? (May be too tricky as pop changes over time)</li>
-    </ul>
-    <div id="viz1"></div>
+      </div>
+      <div class="col-11">
+        <h1>CAPP 30239 - Dynamic Portfolio</h1>
+        <h3>Alec MacMillen</h3>
+        <p>
+          The purpose of this visualization portfolio is to explore electoral, financial, and ideological data
+          germane to US House of Representatives elections in the state of Texas.
+        </p>
+        <div class="bucket">
+          <h4>Visualization 1: County-level results by year</h4>
+          <p>TO-DO:</p>
+          <ul>
+            <li>Add legend, axis titles, format axes, title/subtitle/source</li>
+            <li>Add drop-down menu to highlight county subsets</li>
+            <li>Filter counties to include only most populous</li>
+            <li>
+              Implement interactivity to move between Democratic vote share, registration and turnout on y-axis
+            </li>
+            <li>Fix dimensions: shorter</li>
+          </ul>
+          <div id="viz1"></div>
+          <label for="viz1-metric">Select the metric of interest:</label>
+          <select id="viz1-metric">
+            <option value="demperc">Percent of vote for Democrat</option>
+            <option value="regperc">Percent of county population registered</option>
+            <option value="toperc">Percent of registered voters that turned out</option>
+          </select>
+          <br />
+          <label for="viz1-area">Select the geographic sub-area of interest:</label>
+          <select id="viz1-area">
+            <option value="all">All counties</option>
+            <option value="austin">Austin</option>
+            <option value="dallas">Dallas</option>
+            <option value="houston">Houston</option>
+            <option value="san-antonio">San Antonio</option>
+          </select>
+        </div>
 
-    <h4>Visualization 2: County-level results by year and demographic</h4>
-    <p>TO-DO:</p>
-    <ul>
-      <li>Encode dot size by population</li>
-      <li>Switch ordinal color encoding to diverging continuous for vote share %age</li>
-      <li>Add shape encoding for winning county</li>
-      <li>Add tooltip hover with county name, population, % Democratic</li>
-      <li>Add data for previous cycles</li>
-      <li>Add slider to allow user to select cycle</li>
-      <li>Add legend, axis titles, format axes, title/subtitle/source</li>
-    </ul>
-    <div id="viz2"></div>
 
-    <h4>Visualization 3: Partisan composition of state delegation to US House</h4>
-    <p>TO-DO:</p>
-    <ul>
-      <li>Get it to render properly!</li>
-      <li>Color legislator bubbles by party</li>
-      <li>Add tooltip for legislator detail (district, party, name)</li>
-      <li>Add interactivity allowing slider or dropdown to select session</li>
-    </ul>
-    <div id="viz3"></div>
+        <div class="bucket">
+          <h4>Visualization 2: County-level results by year and demographic</h4>
+          <p>TO-DO:</p>
+          <ul>
+            <li>Update interactivity so tooltip hover with county name, population, % Democratic changes when cycle is selected</li>
+            <li>Add slider to allow user to select cycle?</li>
+            <li>Add legend, axis titles, format axes, title/subtitle/source</li>
+            <li>Fix dimensions: shorter</li>
+          </ul>
 
-    <h4>Visualization 4: Composition of campaign contributions</h4>
-    <div id="viz4"></div>
-    <p>Data still in processing</p>
+          <h5>County-level Democratic vote for US House of Representatives by demographic characteristics, <span id="viz2-year">2002</span></h5>
+          <div id="viz2"></div>
+          <label for="viz2-cycle">Select the election cycle year:</label>
+          <select id="viz2-cycle" onchange="updateViz2()">
+            <option selected="selected" value="2002">2002</option>
+            <option value="2004">2004</option>
+            <option value="2006">2006</option>
+            <option value="2008">2008</option>
+            <option value="2010">2010</option>
+            <option value="2012">2012</option>
+            <option value="2014">2014</option>
+            <option value="2016">2016</option>
+            <option value="2018">2018</option>
+          </select>
+          <label for="viz2-metric">Select the county-level metric of interest:</label>
+          <select id="viz2-metric">
+            <option selected="selected" value="percwhite">Percent of population white</option>
+            <option value="medage">Median age</option>
+          </select>
+        </div>
+        
+        <div class="bucket">
+          <h4>Visualization 3: Composition of campaign contributions, <span id="viz3-cycle">1988</span></h4>
+          <p>TO-DO:</p>
+          <ul>
+            <li>Fix input data to account for inflation in dollar amounts</li>
+            <li>Center on page</li>
+            <li>Add interactivity of selecting cycle and hierarchical ordering (and update font on selection)</li>
+            <li>Add hierarchy order key in center text rendering</li>
+            <li>Find a slightly uh....less aggressive color scheme</li>
+            <li>Implement transitions</li>
+            <li>Write up</li>
+          </ul>
+          <h5>Disaggregated campaign contributions to candidates for US House in Texas, <span id="viz3-year">1998</span></h5>
+          <div id="viz3"></div>
+          <span>
+            <label for="viz3-cycle">Choose an election cycle:</label>
+            <select id="viz3-cycle">
+              <option value="1988">1988</option>
+              <option value="1990">1990</option>
+              <option value="1992">1992</option>
+              <option value="1994">1994</option>
+              <option value="1996">1996</option>
+              <option value="1998">1998</option>
+              <option value="2000">2000</option>
+              <option value="2002">2002</option>
+              <option value="2004">2004</option>
+              <option value="2006">2006</option>
+              <option value="2008">2008</option>
+              <option value="2010">2010</option>
+              <option value="2012">2012</option>
+              <option value="2014">2014</option>
+              <option value="2016">2016</option>
+              <option value="2018">2018</option>
+            </select>
+
+            <label for="viz3-hierarchy">Choose a hierarchical ordering:</label>
+            <select id="viz3-hierarchy">
+              <option value="pdct">Party-District-Candidate-Type</option>
+              <option value="dpct">District-Party-Candidate-Type</option>
+              <option value="ptdc">Party-Type-District-Candidate</option>
+              <option value="tpdc">Type-Party-District-Candidate</option>
+            </select>
+          </span>
+        </div>
+      </div>
+      </div>
+    </div>
+
 
 
 
@@ -61,5 +141,8 @@
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="src/app.js"></script>
     <!--<script src="bundle.js"></script>-->
-  </body>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+</body>
 </html>
