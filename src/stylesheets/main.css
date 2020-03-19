@@ -35,3 +35,9 @@ p, li {
     font-size: 14px;
 }
 
+.tooltip {
+    background-color: white;
+    border: 1px solid black;
+    padding: 3px 8px;
+    border-radius: 3px;
+}

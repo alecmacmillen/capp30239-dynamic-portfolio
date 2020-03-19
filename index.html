@@ -57,13 +57,10 @@
           <h4>Visualization 2: County-level results by year and demographic</h4>
           <p>TO-DO:</p>
           <ul>
-            <li>Update interactivity so tooltip hover with county name, population, % Democratic changes when cycle is selected</li>
-            <li>Add slider to allow user to select cycle?</li>
-            <li>Add legend, axis titles, format axes, title/subtitle/source</li>
-            <li>Fix dimensions: shorter</li>
+            <li>Write up, including source, imputations, encodings, and trends to observe</li>
           </ul>
 
-          <h5>County-level Democratic vote for US House of Representatives by demographic characteristics, <span id="viz2-year">2002</span></h5>
+          <h5>County-level Democratic vote for US House of Representatives by <span id="viz2-metric-title">percent of county population white</span>, <span id="viz2-year">2002</span></h5>
           <div id="viz2"></div>
           <label for="viz2-cycle">Select the election cycle year:</label>
           <select id="viz2-cycle" onchange="updateViz2()">
@@ -78,7 +75,7 @@
             <option value="2018">2018</option>
           </select>
           <label for="viz2-metric">Select the county-level metric of interest:</label>
-          <select id="viz2-metric">
+          <select id="viz2-metric" onchange="updateViz2()">
             <option selected="selected" value="percwhite">Percent of population white</option>
             <option value="medage">Median age</option>
           </select>

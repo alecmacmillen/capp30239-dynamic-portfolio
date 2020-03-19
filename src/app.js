@@ -3,10 +3,12 @@
 // (I tend to think it's best to use screaming snake case for imported json)
 // const domReady = require('domready');
 
+var formatPercent = d3.format(".0%");
+
 document.addEventListener('DOMContentLoaded', () => {
   //console.log(document.getElementById("viz2-cycle").value);
   initViz1();
-  initViz2(2002);
+  initViz2();
   plotviz3(1988);
 
 });
@@ -142,50 +144,57 @@ function initViz2() {
     .then(function (data) {
       //console.log(data);
       let year = document.getElementById("viz2-cycle").value;
-      buildScatter(data, year);
+      let metric = document.getElementById("viz2-metric").value;
+      buildScatter(data, year, metric);
     })
 }
 
-function buildScatter(data, year) {
-  //console.log(year);
+function buildScatter(data, year, metric) {
   const viz2Margin = ({ top: 20, right: 20, bottom: 35, left: 40 });
 
   const viz2Height = 640;
   const viz2Width = 800;
 
-  
+  var formatPercent = d3.format(".0%");
   const viz2Color = d3.scaleDiverging()
     .domain([0, .5, 1])
     .interpolator(d3.interpolateRdBu)
 
-  const viz2Radius = d3.scaleSqrt([0, 5e6], [0, viz2Width / 18]);
+  const viz2Radius = d3.scaleSqrt([-3e3, 6e6], [0, viz2Width / 18]);
 
   const viz2Y = d3.scaleLinear([0, 1], [viz2Height - viz2Margin.bottom, viz2Margin.top]);
-  const viz2X = d3.scaleLinear([.4, 1], [viz2Margin.left, viz2Width - viz2Margin.right]);
+
+  if (metric === "percwhite") {
+    var viz2X = d3.scaleLinear([.4, 1], [viz2Margin.left, viz2Width - viz2Margin.right]);
+  } else if (metric === "medage") {
+    var viz2X = d3.scaleLinear([20, 60], [viz2Margin.left, viz2Width - viz2Margin.right]);
+  }
 
   const viz2YAxis = g => g
     .attr("transform", `translate(${viz2Margin.left},0)`)
-    .call(d3.axisLeft(viz2Y))
+    .call(d3.axisLeft(viz2Y).tickFormat(formatPercent))
     .call(g => g.select(".domain").remove())
     .call(g => g.append("text")
       .attr("x", -viz2Margin.left)
       .attr("y", 10)
       .attr("fill", "currentColor")
       .attr("text-anchor", "start")
-      .text("↑ % of vote share for Democratic candidate"))
+      .text("↑ Vote share for Democratic candidate"))
 
-  const viz2XAxis = g => g
+  var viz2XAxis = g => g
+    .attr("id", "viz2xAxis")
     .attr("transform", `translate(0,${viz2Height - viz2Margin.bottom})`)
-    .call(d3.axisBottom(viz2X).ticks(viz2Width / 80, ","))
+    .call(d3.axisBottom(viz2X).ticks(viz2Width / 80, ",").tickFormat(formatPercent))
     .call(g => g.select(".domain").remove())
     .call(g => g.append("text")
       .attr("x", viz2Width)
       .attr("y", viz2Margin.bottom - 4)
       .attr("fill", "currentColor")
       .attr("text-anchor", "end")
-      .text("→ % of county population white"))
-
+      .text("→ % of county population white"));
+ 
   const grid = g => g
+    .attr("id", "viz2Grid")
     .attr("stroke", "black")
     .attr("stroke-opacity", 0.1)
     .call(g => g.append("g")
@@ -208,6 +217,35 @@ function buildScatter(data, year) {
   const svg = d3.select("#viz2").append("svg")
     .attr("viewBox", [0, 0, viz2Width, viz2Height]);
 
+  var tooltip = d3.select("#viz2")
+    .append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  var tipMouseover = function (d) {
+    var html = "<em>County:</em> " + d.name + "<br/>" +
+      "<em>CSA:</em> " + d.MSA + "<br/>" +
+      "<em>Population:</em> " + d.population.toLocaleString() + "<br/>" +
+      "<em>Percent white:</em> " + d.percwhite.toLocaleString(undefined, { style: 'percent', minimumFractionDigits: 2 }) + "<br/>" +
+      "<em>Median age:</em> " + d.medage + "<br/>" +
+      "<em>Percent Dem vote</em>: " + d.percdem.toLocaleString(undefined, { style: 'percent', minimumFractionDigits: 2 });
+    tooltip.html(html)
+      .style("left", (d3.event.pageX - 500) + "px")
+      .style("top", d3.event.pageY + "px")
+      .transition()
+      .duration(200)
+      .style("opacity", 1)
+  }
+
+  var tipMouseout = function (d) {
+    tooltip.transition()
+      .duration(200)
+      .style("opacity", 0);
+  };
+
+  svg.append("g")
+    .call(grid);
+
   svg.append("g")
     .call(viz2XAxis);
 
@@ -215,9 +253,6 @@ function buildScatter(data, year) {
     .call(viz2YAxis);
 
   svg.append("g")
-    .call(grid);
-
-  const circle = svg.append("g")
     .attr("stroke", "black")
     .selectAll("circle")
     .data(dataAt(data, year), d => d.name)
@@ -227,44 +262,152 @@ function buildScatter(data, year) {
     .attr("cx", d => viz2X(d.percwhite))
     .attr("cy", d => viz2Y(d.percdem))
     .attr("r", d => viz2Radius(d.population))
-    //.attr("fill", d => viz2Color(d.MSA))
     .attr("fill", d => viz2Color(d.percdem))
-    .call(circle => circle.append("title")
-      .text(d => ["County: " + d.name, "MSA: " + d.MSA, "Population: " + d.population.toLocaleString(),
-        "% white: " + d.percwhite.toLocaleString(undefined, { style: 'percent', minimumFractionDigits: 2 }),
-        "% Democrat vote: " + d.percdem.toLocaleString(undefined, { style: 'percent', minimumFractionDigits: 2 })].join("\n")));
+    .on("mouseover", tipMouseover)
+    .on("mouseout", tipMouseout);
 }
 
 function updateViz2() {
-  d3.json("./data/county_scatter_animated.json")
-    .then(function (data) {
-      //console.log(data);
-      let year = document.getElementById("viz2-cycle").value;
-      d3.select("#viz2-year").text(year);
-      console.log(year);
-      const viz2Margin = ({ top: 20, right: 20, bottom: 35, left: 40 });
-      const viz2Height = 640;
-      const viz2Width = 800;
-      const viz2Color = d3.scaleDiverging()
-        .domain([0, .5, 1])
-        .interpolator(d3.interpolateRdBu)
+  let metric = document.getElementById("viz2-metric").value;
+  if (metric === "percwhite") {
+    d3.json("./data/county_scatter_animated.json")
+      .then(function (data) {
+        let year = document.getElementById("viz2-cycle").value;
+        document.getElementById("viz2-year").innerHTML = year;
+        document.getElementById("viz2-metric-title").innerHTML = "percent of county population white";
+        const viz2Margin = ({ top: 20, right: 20, bottom: 35, left: 40 });
+        const viz2Height = 640;
+        const viz2Width = 800;
+        const viz2Color = d3.scaleDiverging()
+          .domain([0, .5, 1])
+          .interpolator(d3.interpolateRdBu)
 
-      const viz2Radius = d3.scaleSqrt([0, 5e6], [0, viz2Width / 18]);
-      const viz2Y = d3.scaleLinear([0, 1], [viz2Height - viz2Margin.bottom, viz2Margin.top]);
-      const viz2X = d3.scaleLinear([.4, 1], [viz2Margin.left, viz2Width - viz2Margin.right]);
+        const viz2Radius = d3.scaleSqrt([-3e3, 6e6], [0, viz2Width / 18]);
+        const viz2Y = d3.scaleLinear([0, 1], [viz2Height - viz2Margin.bottom, viz2Margin.top]);
+        const viz2X = d3.scaleLinear([.4, 1], [viz2Margin.left, viz2Width - viz2Margin.right]);
 
-      let svg = d3.select("#viz2").select("svg");
-      svg.selectAll("circle").data(dataAt(data, year), d => d.name)
-        .each(function (d, i) {
-          d3.select(this)
-            .transition().duration(1000)//.delay(2*i)
-            .attr("cx", d => viz2X(d.percwhite))
-            .attr("cy", d => viz2Y(d.percdem))
-            .attr("r", d => viz2Radius(d.population))
-            .attr("fill", d => viz2Color(d.percdem))
+        var viz2XAxis = g => g
+          .attr("id", "viz2xAxis")
+          .attr("transform", `translate(0,${viz2Height - viz2Margin.bottom})`)
+          .call(d3.axisBottom(viz2X).ticks(viz2Width / 80, ",").tickFormat(formatPercent))
+          .call(g => g.select(".domain").remove())
+          .call(g => g.append("text")
+            .attr("x", viz2Width)
+            .attr("y", viz2Margin.bottom - 4)
+            .attr("fill", "currentColor")
+            .attr("text-anchor", "end")
+            .text("→ % of county population white"));
 
-        });
-    });
+        const grid = g => g
+          .attr("id", "viz2Grid")
+          .attr("stroke", "black")
+          .attr("stroke-opacity", 0.1)
+          .call(g => g.append("g")
+            .selectAll("line")
+            .data(viz2X.ticks())
+            .join("line")
+            .attr("x1", d => 0.5 + viz2X(d))
+            .attr("x2", d => 0.5 + viz2X(d))
+            .attr("y1", viz2Margin.top)
+            .attr("y2", viz2Height - viz2Margin.bottom))
+          .call(g => g.append("g")
+            .selectAll("line")
+            .data(viz2Y.ticks())
+            .join("line")
+            .attr("y1", d => 0.5 + viz2Y(d))
+            .attr("y2", d => 0.5 + viz2Y(d))
+            .attr("x1", viz2Margin.left)
+            .attr("x2", viz2Width - viz2Margin.right));
+
+        let svg = d3.select("#viz2").select("svg");
+
+        d3.select("#viz2xAxis").remove();
+        d3.select("#viz2Grid").remove();
+        svg.insert("g", "g")
+          .call(grid);
+        svg.append("g")
+          .call(viz2XAxis);
+
+        svg.selectAll("circle").data(dataAt(data, year), d => d.name)
+          .each(function (d, i) {
+            d3.select(this)
+              .transition().duration(1000)//.delay(2*i)
+              .attr("cx", d => viz2X(d.percwhite))
+              .attr("cy", d => viz2Y(d.percdem))
+              .attr("r", d => viz2Radius(d.population))
+              .attr("fill", d => viz2Color(d.percdem))
+          })
+      });
+  } else if (metric === "medage") {
+    d3.json("./data/county_scatter_animated.json")
+      .then(function (data) {
+        let year = document.getElementById("viz2-cycle").value;
+        document.getElementById("viz2-year").innerHTML = year;
+        document.getElementById("viz2-metric-title").innerHTML = "county median age";
+        const viz2Margin = ({ top: 20, right: 20, bottom: 35, left: 40 });
+        const viz2Height = 640;
+        const viz2Width = 800;
+        const viz2Color = d3.scaleDiverging()
+          .domain([0, .5, 1])
+          .interpolator(d3.interpolateRdBu)
+
+        const viz2Radius = d3.scaleSqrt([-3e3, 6e6], [0, viz2Width / 18]);
+        const viz2Y = d3.scaleLinear([0, 1], [viz2Height - viz2Margin.bottom, viz2Margin.top]);
+        const viz2X = d3.scaleLinear([20, 60], [viz2Margin.left, viz2Width - viz2Margin.right]);
+
+        var viz2XAxis = g => g
+          .attr("id", "viz2xAxis")
+          .attr("transform", `translate(0,${viz2Height - viz2Margin.bottom})`)
+          .call(d3.axisBottom(viz2X).ticks(viz2Width / 80, ","))
+          .call(g => g.select(".domain").remove())
+          .call(g => g.append("text")
+            .attr("x", viz2Width)
+            .attr("y", viz2Margin.bottom - 4)
+            .attr("fill", "currentColor")
+            .attr("text-anchor", "end")
+            .text("→ county median age"));
+
+        const grid = g => g
+          .attr("id", "viz2Grid")
+          .attr("stroke", "black")
+          .attr("stroke-opacity", 0.1)
+          .call(g => g.append("g")
+            .selectAll("line")
+            .data(viz2X.ticks())
+            .join("line")
+            .attr("x1", d => 0.5 + viz2X(d))
+            .attr("x2", d => 0.5 + viz2X(d))
+            .attr("y1", viz2Margin.top)
+            .attr("y2", viz2Height - viz2Margin.bottom))
+          .call(g => g.append("g")
+            .selectAll("line")
+            .data(viz2Y.ticks())
+            .join("line")
+            .attr("y1", d => 0.5 + viz2Y(d))
+            .attr("y2", d => 0.5 + viz2Y(d))
+            .attr("x1", viz2Margin.left)
+            .attr("x2", viz2Width - viz2Margin.right));
+
+        let svg = d3.select("#viz2").select("svg");
+
+        d3.select("#viz2xAxis").remove();
+        d3.select("#viz2Grid").remove();
+        svg.insert("g", "g")
+          .call(grid);
+        svg.append("g")
+          .call(viz2XAxis);
+
+        svg.selectAll("circle").data(dataAt(data, year), d => d.name)
+          .each(function (d, i) {
+            d3.select(this)
+              .transition().duration(1000)//.delay(2*i)
+              .attr("cx", d => viz2X(d.medage))
+              .attr("cy", d => viz2Y(d.percdem))
+              .attr("r", d => viz2Radius(d.population))
+              .attr("fill", d => viz2Color(d.percdem))
+          })
+      });
+  }
 }
 
 function valueAt(values, year) {
@@ -290,66 +433,6 @@ function dataAt(data, year) {
     medage: valueAt(d.medage, year)
   }));
 }
-
-// Scrubber adapted from https://observablehq.com/@mbostock/scrubber#Scrubber
-function Scrubber(values, {
-  format = value => value,
-  initial = 0,
-  delay = null,
-  autoplay = true,
-  loop = true,
-  alternate = false
-} = {}) {
-  values = Array.from(values);
-  const form = html`<form style="font: 12px var(--sans-serif); font-variant-numeric: tabular-nums; display: flex; height: 33px; align-items: center;">
-  <button name=b type=button style="margin-right: 0.4em; width: 5em;"></button>
-  <label style="display: flex; align-items: center;">
-    <input name=i type=range min=0 max=${values.length - 1} value=${initial} step=1 style="width: 180px;">
-    <output name=o style="margin-left: 0.4em;"></output>
-  </label>
-</form>`;
-  let timer = null;
-  let direction = 1;
-  function start() {
-    form.b.textContent = "Pause";
-    timer = delay === null
-      ? requestAnimationFrame(tick)
-      : setInterval(tick, delay);
-  }
-  function stop() {
-    form.b.textContent = "Play";
-    if (delay === null) cancelAnimationFrame(timer);
-    else clearInterval(timer);
-    timer = null;
-  }
-  function tick() {
-    if (delay === null) timer = requestAnimationFrame(tick);
-    if (form.i.valueAsNumber === (direction > 0 ? values.length - 1 : direction < 0 ? 0 : NaN)) {
-      if (!loop) return stop();
-      if (alternate) direction = -direction;
-    }
-    form.i.valueAsNumber = (form.i.valueAsNumber + direction + values.length) % values.length;
-    form.i.dispatchEvent(new CustomEvent("input", { bubbles: true }));
-  }
-  form.i.oninput = event => {
-    if (event && event.isTrusted && timer) form.b.onclick();
-    form.value = values[form.i.valueAsNumber];
-    form.o.value = format(form.value, form.i.valueAsNumber, values);
-  };
-  form.b.onclick = () => {
-    if (timer) return stop();
-    direction = alternate && form.i.valueAsNumber === values.length - 1 ? -1 : 1;
-    form.i.valueAsNumber = (form.i.valueAsNumber + direction) % values.length;
-    form.i.dispatchEvent(new CustomEvent("input", { bubbles: true }));
-    start();
-  };
-  form.i.oninput();
-  if (autoplay) start();
-  else stop();
-  return Generators.disposable(form, stop);
-}
-
-
 
 
 
