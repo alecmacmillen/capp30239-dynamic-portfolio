@@ -1,4 +1,4 @@
 # CAPP 30239 Dynamic Portfolio
 ## Alec MacMillen
 
-Under construction.
+See live version of the portfolio [here](https://alecmacmillen.github.io/capp30239-dynamic-portfolio/).
