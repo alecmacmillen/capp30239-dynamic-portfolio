@@ -15,7 +15,7 @@
       <div class="col-1">
 
       </div>
-      <div class="col-11">
+      <div class="col-9">
         <h1>CAPP 30239 - Dynamic Portfolio</h1>
         <h3>Alec MacMillen</h3>
         <p>
@@ -44,11 +44,10 @@
           <br />
           <label for="viz1-area">Select the geographic sub-area of interest:</label>
           <select id="viz1-area">
-            <option value="all">All counties</option>
-            <option value="austin">Austin</option>
-            <option value="dallas">Dallas</option>
-            <option value="houston">Houston</option>
-            <option value="san-antonio">San Antonio</option>
+            <option value="Austin">Austin</option>
+            <option value="Dallas">Dallas</option>
+            <option value="Houston">Houston</option>
+            <option value="San Antonio">San Antonio</option>
           </select>
         </div>
 
@@ -60,7 +59,7 @@
             <li>Write up, including source, imputations, encodings, and trends to observe</li>
           </ul>
 
-          <h5>County-level Democratic vote for US House of Representatives by <span id="viz2-metric-title">percent of county population white</span>, <span id="viz2-year">2002</span></h5>
+          <h6>County-level Democratic vote for US House of Representatives by <span id="viz2-metric-title">percent of county population white</span>, <span id="viz2-year">2002</span></h6>
           <div id="viz2"></div>
           <label for="viz2-cycle">Select the election cycle year:</label>
           <select id="viz2-cycle" onchange="updateViz2()">
@@ -82,49 +81,48 @@
         </div>
         
         <div class="bucket">
-          <h4>Visualization 3: Composition of campaign contributions, <span id="viz3-cycle">1988</span></h4>
+          <h4>Visualization 3: Composition of campaign contributions</h4>
           <p>TO-DO:</p>
           <ul>
-            <li>Fix input data to account for inflation in dollar amounts</li>
-            <li>Center on page</li>
-            <li>Add interactivity of selecting cycle and hierarchical ordering (and update font on selection)</li>
-            <li>Add hierarchy order key in center text rendering</li>
-            <li>Find a slightly uh....less aggressive color scheme</li>
-            <li>Implement transitions</li>
-            <li>Write up</li>
+            <li>Write up: source, how to read (encodings), nominal dollar amounts</li>
           </ul>
-          <h5>Disaggregated campaign contributions to candidates for US House in Texas, <span id="viz3-year">1998</span></h5>
-          <div id="viz3"></div>
-          <span>
-            <label for="viz3-cycle">Choose an election cycle:</label>
-            <select id="viz3-cycle">
-              <option value="1988">1988</option>
-              <option value="1990">1990</option>
-              <option value="1992">1992</option>
-              <option value="1994">1994</option>
-              <option value="1996">1996</option>
-              <option value="1998">1998</option>
-              <option value="2000">2000</option>
-              <option value="2002">2002</option>
-              <option value="2004">2004</option>
-              <option value="2006">2006</option>
-              <option value="2008">2008</option>
-              <option value="2010">2010</option>
-              <option value="2012">2012</option>
-              <option value="2014">2014</option>
-              <option value="2016">2016</option>
-              <option value="2018">2018</option>
-            </select>
-
-            <label for="viz3-hierarchy">Choose a hierarchical ordering:</label>
-            <select id="viz3-hierarchy">
-              <option value="pdct">Party-District-Candidate-Type</option>
-              <option value="dpct">District-Party-Candidate-Type</option>
-              <option value="ptdc">Party-Type-District-Candidate</option>
-              <option value="tpdc">Type-Party-District-Candidate</option>
-            </select>
-          </span>
+          <h5>Disaggregated campaign contributions to candidates for US House in Texas, <span id="viz3-year">1988</span></h5>
+          <div id="viz3"><svg></svg></div>
+          <div id="viz3-options">
+            <div class="viz3-opt">
+              <label for="viz3-cycle">Choose an election cycle:</label>
+              <select id="viz3-cycle" onchange="plotviz3()">
+                <option value="1988" selected="selected">1988</option>
+                <option value="1990">1990</option>
+                <option value="1992">1992</option>
+                <option value="1994">1994</option>
+                <option value="1996">1996</option>
+                <option value="1998">1998</option>
+                <option value="2000">2000</option>
+                <option value="2002">2002</option>
+                <option value="2004">2004</option>
+                <option value="2006">2006</option>
+                <option value="2008">2008</option>
+                <option value="2010">2010</option>
+                <option value="2012">2012</option>
+                <option value="2014">2014</option>
+                <option value="2016">2016</option>
+                <option value="2018">2018</option>
+              </select>
+            </div>
+            <div class="viz3-opt">
+              <label for="viz3-hierarchy">Choose a hierarchical ordering:</label>
+              <select id="viz3-hierarchy" onchange="plotviz3()">
+                <option value="pdct">Party-District-Candidate-Type</option>
+                <option value="dpct">District-Party-Candidate-Type</option>
+                <option value="ptdc">Party-Type-District-Candidate</option>
+                <option value="tpdc">Type-Party-District-Candidate</option>
+              </select>
+            </div>
+          </div>
         </div>
+      </div>
+      <div class="col-2">
       </div>
       </div>
     </div>

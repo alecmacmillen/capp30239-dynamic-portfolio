@@ -1,29 +1,32 @@
-// if the data you are going to import is small, then you can import it using es6 import
-// import MY_DATA from './app/data/example.json'
-// (I tend to think it's best to use screaming snake case for imported json)
-// const domReady = require('domready');
-
-var formatPercent = d3.format(".0%");
 
 document.addEventListener('DOMContentLoaded', () => {
-  //console.log(document.getElementById("viz2-cycle").value);
   initViz1();
   initViz2();
   plotviz3(1988);
 
 });
 
+var formatPercent = d3.format(".0%");
+//var viz1Colors = {
+//  demperc: 'steelblue',
+//  regperc: 'mediumvioletred',
+//  toperc: 'limegreen'
+//}
+
 // VIZ 1 - multi-line chart
 function initViz1() {
+  var area = document.getElementById("viz1-area").value;
   d3.csv("./data/countyline_dem_IMPUTE.csv")
     .then(function (data) {
+      var newData = data.filter(function (d) { return d.CSA === area; });
       let years = ["2002", "2004", "2006", "2008", "2010", "2012", "2014", "2016", "2018"];
-      const columns = data.columns.slice(1);
+      const columns = data.columns.slice(2);
       const plotData = {
         y: "% Democratic vote",
-        series: data.map(d => ({
+        series: newData.map(d => ({
           name: d.County,
-          values: columns.map(k => (+d[k]).toFixed(4))
+          CSA: d.CSA,
+          values: columns.map(k => parseFloat(+d[k]))
         })),
         dates: years.map(d3.utcParse("%Y"))
       }
@@ -37,7 +40,8 @@ function buildLine(data) {
   const viz1Margin = ({ top: 20, right: 20, bottom: 30, left: 30 });
 
   const viz1Y = d3.scaleLinear()
-    .domain([0, d3.max(data.series, d => d3.max(d.values))]).nice()
+    .domain([0, 1])
+    //.domain([0, d3.max(data.series, d => d3.max(d.values))]).nice()
     .range([viz1Height - viz1Margin.bottom, viz1Margin.top])
 
   const viz1X = d3.scaleUtc()
@@ -46,13 +50,14 @@ function buildLine(data) {
 
   const viz1YAxis = g => g
     .attr("transform", `translate(${viz1Margin.left},0)`)
-    .call(d3.axisLeft(viz1Y))
+    .call(d3.axisLeft(viz1Y).tickFormat(formatPercent))
     .call(g => g.select(".domain").remove())
-    .call(g => g.select(".tick:last-of-type text").clone()
-      .attr("x", 3)
+    .call(g => g.append("text")
+      .attr("x", -viz1Margin.left)
+      .attr("y", 10)
+      .attr("fill", "currentColor")
       .attr("text-anchor", "start")
-      .attr("font-weight", "bold")
-      .text(data.y))
+      .text("↑ Vote share for Democratic candidate"));
 
   const viz1XAxis = g => g
     .attr("transform", `translate(0,${viz1Height - viz1Margin.bottom})`)
@@ -67,15 +72,39 @@ function buildLine(data) {
     .attr("viewBox", [0, 0, viz1Width, viz1Height])
     .style("overflow", "visible")
 
-  svg.append("g")
-    .call(viz1XAxis)
+  const grid = g => g
+    .attr("id", "viz1Grid")
+    .attr("stroke", "black")
+    .attr("stroke-opacity", 0.1)
+    .call(g => g.append("g")
+      .selectAll("line")
+      .data(viz1X.ticks())
+      .join("line")
+      .attr("x1", d => 0.5 + viz1X(d))
+      .attr("x2", d => 0.5 + viz1X(d))
+      .attr("y1", viz1Margin.top)
+      .attr("y2", viz1Height - viz1Margin.bottom))
+    .call(g => g.append("g")
+      .selectAll("line")
+      .data(viz1Y.ticks())
+      .join("line")
+      .attr("y1", d => 0.5 + viz1Y(d))
+      .attr("y2", d => 0.5 + viz1Y(d))
+      .attr("x1", viz1Margin.left)
+      .attr("x2", viz1Width - viz1Margin.right));
 
   svg.append("g")
-    .call(viz1YAxis)
+    .call(viz1XAxis);
+
+  svg.append("g")
+    .call(viz1YAxis);
+
+  svg.append("g")
+    .call(grid);
 
   const path = svg.append("g")
     .attr("fill", "none")
-    .attr("stroke", "steelblue")
+    .attr("stroke", "royalblue")
     .attr("stroke-width", 1.5)
     .attr("stroke-linejoin", "round")
     .attr("stroke-linecap", "round")
@@ -130,10 +159,9 @@ function buildLine(data) {
       dot.attr("display", "none");
     }
   }
-
   svg.call(hover, path);
-
   return svg.node();
+
 }
 
 
@@ -142,7 +170,6 @@ function buildLine(data) {
 function initViz2() {
   d3.json("./data/county_scatter_animated.json")
     .then(function (data) {
-      //console.log(data);
       let year = document.getElementById("viz2-cycle").value;
       let metric = document.getElementById("viz2-metric").value;
       buildScatter(data, year, metric);
@@ -171,6 +198,7 @@ function buildScatter(data, year, metric) {
   }
 
   const viz2YAxis = g => g
+    .attr("id", "viz2YAxis")
     .attr("transform", `translate(${viz2Margin.left},0)`)
     .call(d3.axisLeft(viz2Y).tickFormat(formatPercent))
     .call(g => g.select(".domain").remove())
@@ -209,8 +237,8 @@ function buildScatter(data, year, metric) {
       .selectAll("line")
       .data(viz2Y.ticks())
       .join("line")
-      .attr("y1", d => 0.5 + viz2Y(d))
-      .attr("y2", d => 0.5 + viz2Y(d))
+      .attr("y1", d => 0.4 + viz2Y(d))
+      .attr("y2", d => 0.4 + viz2Y(d))
       .attr("x1", viz2Margin.left)
       .attr("x2", viz2Width - viz2Margin.right));
 
@@ -423,7 +451,6 @@ function valueAt(values, year) {
 }
 
 function dataAt(data, year) {
-  //console.log(data);
   return data.map(d => ({
     name: d.name,
     MSA: d.MSA,
@@ -439,9 +466,30 @@ function dataAt(data, year) {
 
 
 
-// VIZ 4 - SEQUENCES SUNBURST
-const breadcrumbHeight = 30;
-const breadcrumbWidth = 75;
+// VIZ 3 - SEQUENCES SUNBURST
+const hierarchyDict = {
+  pdct: "party, district, candidate, type",
+  dpct: "district, party, candidate, type",
+  ptdc: "party, type, district, candidate",
+  tpdc: "type, party, district, candidate"
+}
+
+const viz3PartyColor = d3.scaleOrdinal()
+  .domain(["Democratic", "Republican", "Individual", "Other", "1", "2", "3", "4", "5",
+    "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16",
+    "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27",
+    "28", "29", "30", "31", "32", "33", "34", "35", "36"])
+  .range(["royalblue", "crimson", "mediumpurple", "indigo",
+    "#fef200", "#fff001", "#feed00", "#ffea00", "#ffe700", "#ffe400", "#fee100",
+    "#ffde00", "#ffdb00", "#ffd800", "#fed500", "#ffd203", "#fece0a", "#fecb10",
+    "#ffc816", "#ffc51c", "#ffc221", "#ffbe24", "#ffbb2a", "#ffb72d", "#ffb530",
+    "#ffb234", "#ffae38", "#ffab3b", "#ffa83f", "#ffa544", "#ffa147", "#fe934a",
+    "#ff9b4d", "#ff9750", "#ff9454", "#ff9058", "#ff8e5a", "#ff8a5f", "#ff8762",
+    "#ff8465"])
+  .unknown("gainsboro");
+
+console.log(viz3PartyColor);
+
 const width = 640;
 const radius = width / 2;
 const mousearc = d3.arc()
@@ -456,9 +504,6 @@ const arc = d3.arc()
   .padRadius(radius)
   .innerRadius(d => Math.sqrt(d.y0))
   .outerRadius(d => Math.sqrt(d.y1) - 1);
-const color = d3.scaleOrdinal()
-  .domain(["party", "district", "name", "type"])
-  .range(["#ffd700", "#ffb14e", "#fa8775", "#ea5f94", "#cd34b5", "#9d02d7", "#d3d3d3"]);
 
 function formatMoney(amount, decimalCount = 2, decimal = ".", thousands = ",") {
   // credit to https://stackoverflow.com/questions/149055/how-to-format-numbers-as-currency-string
@@ -477,21 +522,6 @@ function formatMoney(amount, decimalCount = 2, decimal = ".", thousands = ",") {
   }
 };
 
-function breadcrumbPoints(d, i) {
-  // Generate a string that describes the points of a breadcrumb SVG polygon
-  const tipWidth = 10;
-  const points = [];
-  points.push("0,0");
-  points.push(`${breadcrumbWidth},0`);
-  points.push(`${breadcrumbWidth + tipWidth},${breadcrumbHeight / 2}`);
-  points.push(`${breadcrumbWidth},${breadcrumbHeight}`);
-  points.push(`0,${breadcrumbHeight}`);
-  if (i > 0) {
-    points.push(`${tipWidth},${breadcrumbHeight / 2}`);
-  }
-  return points.join(" ");
-}
-
 function partition(data) {
   d3.partition().size([2 * Math.PI, radius * radius])(
     d3.hierarchy(data)
@@ -500,21 +530,30 @@ function partition(data) {
   )
 }
 
-function plotviz3(year) {
+function plotviz3() {
+  d3.select("#viz3").select("svg").selectAll("*").remove();
+  var year = parseInt(document.getElementById("viz3-cycle").value);
+  var hierarchy = document.getElementById("viz3-hierarchy").value;
+  document.getElementById("viz3-year").innerHTML = year;
   d3.csv("../data/sunburst_FINAL.csv")
     .then(function (data) {
       const yearlyDataArray = [];
       // Filter data by the provided year
       data.forEach(function (obj) {
         if (+obj.CAND_ELECTION_YR === year) {
-          // Only add district to the sequence for House candidates
-          if (obj.CAND_OFFICE === "House") {
-            let newArray = [obj.CAND_PTY_AFFILIATION, obj.CAND_OFFICE_DISTRICT,
-                            obj.CAND_NAME, obj.CONTRIB_TYPE];
-            yearlyDataArray.push(
-              [newArray.join("-"), obj.CONTRIB_AMT]
-            );
-          } 
+          if (hierarchy === "pdct") {
+            let newArray = [obj.CAND_PTY_AFFILIATION, obj.CAND_OFFICE_DISTRICT, obj.CAND_NAME, obj.CONTRIB_TYPE];
+            yearlyDataArray.push([newArray.join("-"), obj.CONTRIB_AMT])
+          } else if (hierarchy === "dpct") {
+            let newArray = [obj.CAND_OFFICE_DISTRICT, obj.CAND_PTY_AFFILIATION, obj.CAND_NAME, obj.CONTRIB_TYPE];
+            yearlyDataArray.push([newArray.join("-"), obj.CONTRIB_AMT])
+          } else if (hierarchy === "ptdc") {
+            let newArray = [obj.CAND_PTY_AFFILIATION, obj.CONTRIB_TYPE, obj.CAND_OFFICE_DISTRICT, obj.CAND_NAME];
+            yearlyDataArray.push([newArray.join("-"), obj.CONTRIB_AMT])
+          } else if (hierarchy === "tpdc") {
+            let newArray = [obj.CONTRIB_TYPE, obj.CAND_PTY_AFFILIATION, obj.CAND_OFFICE_DISTRICT, obj.CAND_NAME];
+            yearlyDataArray.push([newArray.join("-"), obj.CONTRIB_AMT])
+          }
         }
       });
       const plotData = buildHierarchy(yearlyDataArray);
@@ -563,12 +602,13 @@ function buildHierarchy(inputData) {
   return root;
 }
 
+//.sort((a, b) => b.value - a.value));
+
 function buildSunburst(plotData) {
+  const hierarchyVal = document.getElementById("viz3-hierarchy").value;
   const root = d3.partition().size([2 * Math.PI, radius * radius])(
-    d3.hierarchy(plotData).sum(d => d.value)
-      .sort((a, b) => b.value - a.value));
-  //console.log(root);
-  const svg = d3.select("#viz3").append("svg");
+    d3.hierarchy(plotData).sum(d => d.value));
+  const svg = d3.select("#viz3").select("svg");
   const element = svg.node();
   element.value = { sequence: [], dollarsum: 0.0 };
 
@@ -592,7 +632,7 @@ function buildSunburst(plotData) {
     .attr("x", 0)
     .attr("y", 0)
     .attr("dy", "1.5em")
-    .text("in total contributions to selected subgroup");
+    .text("in contributions by " + hierarchyDict[hierarchyVal]);
 
   label
     .append("tspan")
@@ -612,11 +652,12 @@ function buildSunburst(plotData) {
     .selectAll("path")
     .data(
       root.descendants().filter(d => {
+        //console.log(d);
         return d.depth && d.x1 - d.x0 > 0.001;
       })
     )
     .join("path")
-    .attr("fill", d => color(d.data.name))
+    .attr("fill", d => viz3PartyColor(d.data.name))
     .attr("d", arc);
 
   svg
