@@ -656,7 +656,7 @@ function plotviz3() {
   var year = parseInt(document.getElementById("viz3-cycle").value);
   var hierarchy = document.getElementById("viz3-hierarchy").value;
   document.getElementById("viz3-year").innerHTML = year;
-  d3.csv("../data/sunburst_FINAL.csv")
+  d3.csv("./data/sunburst_FINAL.csv")
     .then(function (data) {
       const yearlyDataArray = [];
       // Filter data by the provided year
