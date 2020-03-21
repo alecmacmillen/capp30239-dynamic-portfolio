@@ -12,56 +12,78 @@
 <body>
   <div class="container">
     <div class="row">
-      <div class="col-1">
+      <div class="col-2">
 
       </div>
-      <div class="col-9">
+      <div class="col-8">
         <h1>CAPP 30239 - Dynamic Portfolio</h1>
         <h3>Alec MacMillen</h3>
         <p>
-          The purpose of this visualization portfolio is to explore electoral, financial, and ideological data
-          germane to US House of Representatives elections in the state of Texas.
+          The purpose of this visualization portfolio is to explore electoral and financial data germane to US
+          House of Representatives elections in the state of Texas. Although Texas has been a reliable Republican
+          stronghold for many years, rapid demographic change has raised Democrats' hopes that they may be able to
+          compete in 2020 and beyond. Democrats flipped 2 US House seats in the 2018 midterms and will likely attempt
+          to expand their success in the current cycle.
         </p>
         <div class="bucket">
           <h4>Visualization 1: County-level results by year</h4>
-          <p>TO-DO:</p>
-          <ul>
-            <li>Add legend, axis titles, format axes, title/subtitle/source</li>
-            <li>Add drop-down menu to highlight county subsets</li>
-            <li>Filter counties to include only most populous</li>
-            <li>
-              Implement interactivity to move between Democratic vote share, registration and turnout on y-axis
-            </li>
-            <li>Fix dimensions: shorter</li>
-          </ul>
+          <p>
+            The first visualization is a simple line chart of a series of election-related measures for counties in
+            each of 4 major metro areas in Texas (Austin, Dallas, Houston and San Antonio). The x-axis encodes time,
+            running from 2002-2018, and the y-axis captures the percent of citizens or voters in each county that
+            either was registered to vote, turned out to vote, or voted for the Democratic candidate in each cycle
+            since 2002. You can toggle the data displayed by the chart by updating the selections below the plot area,
+            and highlight a particular county and display its name by hovering over the corresponding line.
+          </p>
+          <h6>County-level <span id="viz1-metric-title">percent of Democratic vote share</span> for the <span id="viz1-area-title">Austin</span> metro region</h6>
           <div id="viz1"></div>
-          <label for="viz1-metric">Select the metric of interest:</label>
-          <select id="viz1-metric">
-            <option value="demperc">Percent of vote for Democrat</option>
-            <option value="regperc">Percent of county population registered</option>
-            <option value="toperc">Percent of registered voters that turned out</option>
+          <label for="viz1-metric">Choose a metric:</label>
+          <select id="viz1-metric" onchange="updateViz1()">
+            <option value="demperc">Percent vote Democratic</option>
+            <option value="regperc">Percent of county registered</option>
+            <option value="toperc">Percent of registered turnout</option>
           </select>
-          <br />
-          <label for="viz1-area">Select the geographic sub-area of interest:</label>
-          <select id="viz1-area">
+          <label for="viz1-area">Choose a metro region:</label>
+          <select id="viz1-area" onchange="updateViz1()">
             <option value="Austin">Austin</option>
             <option value="Dallas">Dallas</option>
             <option value="Houston">Houston</option>
             <option value="San Antonio">San Antonio</option>
           </select>
+          <p>Data source: <a href="ftp://ftpgis1.tlc.texas.gov/elections">Texas Secretary of State election data</a></p>
+          <p>
+            A few key patterns are immediately discernible. In all 4 metro areas, turnout is highly cyclical, with
+            more than 60% of voters turning out in presidential election years and often less than 40% turning out
+            in midterm years. A key exception is 2018: in all 4 metro areas, the dropoff from 2016 to 2018 turnout
+            was markedly less than the dropoff between previous presidential and midterm cycles, speaking to high
+            voter enthusiasm that year.
+          </p>
+          <p>
+            Most metro areas also show an increase in voter registration over time, with the counties in the San
+            Antonio area having consistently the highest registration percentages. As far as percentage support for
+            Democratic House candidates, it's worth noting that the largest county in all 4 metro areas (Travis County
+            in Austin, Dallas County in Dallas, Harris County in Houston, and Bexar County in San Antonio) exhibited
+            the most positive growth in Democratic vote share from 2002-2018, indicating that Democrats are consolidating
+            their support in major population centers while staying largely static (or even losing votes) in less-populated
+            rural and exurban areas.
+          </p>
         </div>
 
 
         <div class="bucket">
           <h4>Visualization 2: County-level results by year and demographic</h4>
-          <p>TO-DO:</p>
-          <ul>
-            <li>Write up, including source, imputations, encodings, and trends to observe</li>
-          </ul>
+          <p>
+            The second visualization is a scatter plot in which each dot represents a county in Texas. Dot size represents
+            county population, fill color encodes percent of vote received by the Democratic candidate for US House in the
+            given cycle (as does relative position in the vertical direction), while position in the horizontal direction
+            represents a county-level demographic measure (either percent of population white or median age). There is a
+            tooltip available that displays these metrics in detail by hovering over a county's dot. To change the election
+            cycle or the demographic measure of interest, use the drop-down menus below the chart.
+          </p>
 
-          <h6>County-level Democratic vote for US House of Representatives by <span id="viz2-metric-title">percent of county population white</span>, <span id="viz2-year">2002</span></h6>
+          <h6>County-level Democratic vote for US House by <span id="viz2-metric-title">percent of county population white</span>, <span id="viz2-year">2002</span></h6>
           <div id="viz2"></div>
-          <label for="viz2-cycle">Select the election cycle year:</label>
+          <label for="viz2-cycle">Choose an election cycle:</label>
           <select id="viz2-cycle" onchange="updateViz2()">
             <option selected="selected" value="2002">2002</option>
             <option value="2004">2004</option>
@@ -73,23 +95,49 @@
             <option value="2016">2016</option>
             <option value="2018">2018</option>
           </select>
-          <label for="viz2-metric">Select the county-level metric of interest:</label>
+          <label for="viz2-metric">Choose a metric:</label>
           <select id="viz2-metric" onchange="updateViz2()">
             <option selected="selected" value="percwhite">Percent of population white</option>
             <option value="medage">Median age</option>
           </select>
+          <p>
+            Sources:
+          </p>
+          <ul>
+            <li>Texas Secretary of State election data (linked above)</li>
+            <li>American Community Survey (ACS) data, accessed through the <a href="https://walkerke.github.io/tidycensus/">Tidycensus</a> package for R</li>
+          </ul>
+          <p>
+            One of the most intriguing trends in the data can be observed by comparing the 2002 plot
+            against the 2018 plot for both demographic measures. In 2002, the data are much more evenly
+            dispersed across the domain of the plot: there appears to be no serious correlations between
+            county population, median age, and proportion white and that county's propensity to vote Democratic.
+            However, in 2018, a stark trend is observable: smaller, whiter, and older counties are much more
+            likely to vote Republican, while larger, more diverse, and younger counties opt for Democrats.
+            Counties appear to have begun sorting themselves by the elections of 2008 and 2010, with the new
+            partisan alignments in full swing by 2012.
+          </p>
         </div>
         
         <div class="bucket">
           <h4>Visualization 3: Composition of campaign contributions</h4>
-          <p>TO-DO:</p>
-          <ul>
-            <li>Write up: source, how to read (encodings), nominal dollar amounts</li>
-          </ul>
-          <h5>Disaggregated campaign contributions to candidates for US House in Texas, <span id="viz3-year">1988</span></h5>
+          <p>
+            The third and final visualization examines campaign finance data for major-party (Democratic and Republican)
+            candidates for US House in Texas, for all campaign cycles 1988-2018. The visualization progressively disaggregates
+            all campaign receipts by party, district, candidate, and type (individual giving from private citizens and a catch-
+            all "other" category that includes campaign and corporate donations). You can hover over any distinct path with any
+            number of layers in the sunburst to see the campaign receipts associated with that path in nominal same-year dollars.
+            Colors encode information about the selected path: red represents Republicans and blue represents Democrats; dark indigo
+            represents "other" receipts while light purple represents individual giving; and district numbers take on a chromatic
+            yellow-orange scale to visually distinguish individual races. Candidates are all represented by light gray because there
+            are too many distinct candidates over 30 cycles (well into the hundreds) to meaningfully encode them using color. You can
+            interact with the graphic by selecting an election cycle or a different hierarchy of disaggregations in the menus below
+            the graph. The disaggregation hierarchy allows you to explore contribution breakdowns in different orders.
+          </p>
+          <h6>Disaggregated campaign contributions to candidates for US House in Texas, <span id="viz3-year">1988</span></h6>
           <div id="viz3"><svg></svg></div>
-          <div id="viz3-options">
-            <div class="viz3-opt">
+          <div class="viz-options">
+            <div class="viz-opt">
               <label for="viz3-cycle">Choose an election cycle:</label>
               <select id="viz3-cycle" onchange="plotviz3()">
                 <option value="1988" selected="selected">1988</option>
@@ -110,7 +158,7 @@
                 <option value="2018">2018</option>
               </select>
             </div>
-            <div class="viz3-opt">
+            <div class="viz-opt">
               <label for="viz3-hierarchy">Choose a hierarchical ordering:</label>
               <select id="viz3-hierarchy" onchange="plotviz3()">
                 <option value="pdct">Party-District-Candidate-Type</option>
@@ -120,6 +168,24 @@
               </select>
             </div>
           </div>
+          <p>
+            Sources:
+          </p>
+          <ul>
+            <li><a href="https://www.fec.gov/data/browse-data/?tab=bulk-data">Federal Election Commission bulk data</a></li>
+          </ul>
+          <p>
+            Progressively moving through election cycles using the Party-Type-District-Candidate hierarchy reveals that
+            Democrats had the fundraising advantage in the 1980s and early 1990s, but Republicans overtook them by the mid-90s
+            and enjoyed a 2-to-1 and even nearly 3-to-1 advantage throughout the 2000s and into the mid-2010s. Democrats nearly
+            caught them in the 2018 cycle, however, with the help of an absolutely massive individual contribution fundraising haul.
+          </p>
+
+          <h6>Credits</h6>
+          <p>The Github repository for this page can be found <a href="https://github.com/alecmacmillen/capp30239-dynamic-portfolio">here</a>.
+            Inspiration for these visualizations was drawn from Observabale HQ, especially <a href="https://observablehq.com/@d3/multi-line-chart">here</a>,
+            <a href="https://observablehq.com/@mbostock/the-wealth-health-of-nations">here</a>, and <a href="https://observablehq.com/@kerryrodden/sequences-sunburst">here</a>.
+          </p>
         </div>
       </div>
       <div class="col-2">

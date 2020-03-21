@@ -7,13 +7,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 var formatPercent = d3.format(".0%");
-//var viz1Colors = {
-//  demperc: 'steelblue',
-//  regperc: 'mediumvioletred',
-//  toperc: 'limegreen'
-//}
+var viz1Colors = {
+  demperc: 'royalblue',
+  regperc: 'saddlebrown',
+  toperc: 'green'
+}
 
 // VIZ 1 - multi-line chart
+// inspiration/adapted from https://observablehq.com/@d3/multi-line-chart
 function initViz1() {
   var area = document.getElementById("viz1-area").value;
   d3.csv("./data/countyline_dem_IMPUTE.csv")
@@ -41,7 +42,6 @@ function buildLine(data) {
 
   const viz1Y = d3.scaleLinear()
     .domain([0, 1])
-    //.domain([0, d3.max(data.series, d => d3.max(d.values))]).nice()
     .range([viz1Height - viz1Margin.bottom, viz1Margin.top])
 
   const viz1X = d3.scaleUtc()
@@ -49,6 +49,7 @@ function buildLine(data) {
     .range([viz1Margin.left, viz1Width - viz1Margin.right])
 
   const viz1YAxis = g => g
+    .attr("id", "viz1YAxis")
     .attr("transform", `translate(${viz1Margin.left},0)`)
     .call(d3.axisLeft(viz1Y).tickFormat(formatPercent))
     .call(g => g.select(".domain").remove())
@@ -62,6 +63,12 @@ function buildLine(data) {
   const viz1XAxis = g => g
     .attr("transform", `translate(0,${viz1Height - viz1Margin.bottom})`)
     .call(d3.axisBottom(viz1X).ticks(viz1Width / 80).tickSizeOuter(0))
+    .call(g => g.append("text")
+      .attr("x", viz1Width - 10)
+      .attr("y", viz1Margin.bottom - 2)
+      .attr("fill", "currentColor")
+      .attr("text-anchor", "end")
+      .text("→ Year"));
 
   const viz1Line = d3.line()
     .defined(d => !isNaN(d))
@@ -102,71 +109,182 @@ function buildLine(data) {
   svg.append("g")
     .call(grid);
 
+  var tooltip = d3.select("#viz1")
+    .append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  var tipMouseover = function (d) {
+    var html = "<em>" + d.name + " County</em>";
+    tooltip.html(html)
+      .style("left", (d3.event.pageX - 440) + "px")
+      .style("top", d3.event.pageY + "px")
+      .transition()
+      .duration(200)
+      .style("opacity", 1)
+    const ym = viz1Y.invert(d3.event.layerY);
+    const xm = viz1X.invert(d3.event.layerX);
+    const i1 = d3.bisectLeft(data.dates, xm, 1);
+    const i0 = i1 - 1;
+    const i = xm - data.dates[i0] > data.dates[i1] - xm ? i1 : i0;
+    const s = d;
+    path.attr("stroke", d => d === s ? null : '#ddd').filter(d => d === s).raise();
+  }
+
+  var tipMouseout = function (d) {
+    tooltip.transition()
+      .duration(200)
+      .style("opacity", 0);
+    path.style("mix-blend-mode", "multiply").attr("stroke", null);
+  };
+
   const path = svg.append("g")
     .attr("fill", "none")
     .attr("stroke", "royalblue")
-    .attr("stroke-width", 1.5)
+    .attr("stroke-width", 2.5)
+    .attr("opacity", 0.8)
     .attr("stroke-linejoin", "round")
     .attr("stroke-linecap", "round")
     .selectAll("path")
     .data(data.series)
     .join("path")
     .style("mix-blend-mode", "multiply")
-    .attr("d", d => viz1Line(d.values));
+    .attr("d", d => viz1Line(d.values))
+    .on("mouseover", tipMouseover)
+    .on("mouseout", tipMouseout);
+}
 
-  function hover(svg, path) {
-    if ("ontouchstart" in document) svg
-      .style("-webkit-tap-highlight-color", "transparent")
-      .on("touchmove", moved)
-      .on("touchstart", entered)
-      .on("touchend", left)
-    else svg
-      .on("mousemove", moved)
-      .on("mouseenter", entered)
-      .on("mouseleave", left);
+const viz1Files = {
+  'demperc': './data/countyline_dem_IMPUTE.csv',
+  'regperc': './data/countyline_reg_IMPUTE.csv',
+  'toperc': './data/countyline_to_IMPUTE.csv'
+}
 
-    const dot = svg.append("g")
-      .attr("display", "none");
+const viz1Titles = {
+  'demperc': 'percent of Democratic vote share',
+  'regperc': 'percent of eligible citizens registered to vote',
+  'toperc': 'percent of registered voters turned out'
+}
 
-    dot.append("circle")
-      .attr("r", 2.5)
+const viz1Legend = {
+  'demperc': '↑ Vote share for Democratic candidate',
+  'regperc': '↑ Percent of eligible citizens registered to vote',
+  'toperc': '↑ Percent of registered voters turned out'
+}
 
-    dot.append("text")
-      .style("font", "10px sans-serif")
-      .attr("text-anchor", "middle")
-      .attr("y", -8);
+function updateViz1() {
+  var area = document.getElementById("viz1-area").value;
+  var metric = document.getElementById("viz1-metric").value;
+  document.getElementById("viz1-area-title").innerHTML = area;
+  document.getElementById("viz1-metric-title").innerHTML = viz1Titles[metric];
+  d3.csv(viz1Files[metric])
+    .then(function (data) {
+      var newData = data.filter(function (d) { return d.CSA === area; });
+      let years = ["2002", "2004", "2006", "2008", "2010", "2012", "2014", "2016", "2018"];
+      const columns = data.columns.slice(2);
+      const plotData = {
+        y: "% Democratic vote",
+        series: newData.map(d => ({
+          name: d.County,
+          CSA: d.CSA,
+          values: columns.map(k => parseFloat(+d[k]))
+        })),
+        dates: years.map(d3.utcParse("%Y"))
+      }
+      updateLine(plotData);
+    });
+}
 
-    function moved() {
-      d3.event.preventDefault();
-      const ym = viz1Y.invert(d3.event.layerY);
-      const xm = viz1X.invert(d3.event.layerX);
-      const i1 = d3.bisectLeft(data.dates, xm, 1);
-      const i0 = i1 - 1;
-      const i = xm - data.dates[i0] > data.dates[i1] - xm ? i1 : i0;
-      const s = data.series.reduce((a, b) => Math.abs(a.values[i] - ym) < Math.abs(b.values[i] - ym) ? a : b);
-      path.attr("stroke", d => d === s ? null : '#ddd').filter(d => d === s).raise();
-      dot.attr("transform", `translate(${viz1X(data.dates[i])},${viz1Y(s.values[i])})`);
-      dot.select("text").text(s.name);
-    }
+function updateLine(data) {
+  var metric = document.getElementById("viz1-metric").value;
+  let svg = d3.select("#viz1").select("svg");
 
-    function entered() {
-      path.style("mix-blend-mode", null).attr("stroke", "#ddd");
-      dot.attr("display", null);
-    }
+  const viz1Height = 600;
+  const viz1Width = 640;
+  const viz1Margin = ({ top: 20, right: 20, bottom: 30, left: 30 });
 
-    function left() {
-      path.style("mix-blend-mode", "multiply").attr("stroke", null);
-      dot.attr("display", "none");
-    }
+  const viz1Y = d3.scaleLinear()
+    .domain([0, 1])
+    .range([viz1Height - viz1Margin.bottom, viz1Margin.top])
+
+  const viz1YAxis = g => g
+    .attr("id", "viz1YAxis")
+    .attr("transform", `translate(${viz1Margin.left},0)`)
+    .call(d3.axisLeft(viz1Y).tickFormat(formatPercent))
+    .call(g => g.select(".domain").remove())
+    .call(g => g.append("text")
+      .attr("x", -viz1Margin.left)
+      .attr("y", 10)
+      .attr("fill", "currentColor")
+      .attr("text-anchor", "start")
+      .text(viz1Legend[metric]));
+
+  const viz1X = d3.scaleUtc()
+    .domain(d3.extent(data.dates))
+    .range([viz1Margin.left, viz1Width - viz1Margin.right])
+
+  const viz1Line = d3.line()
+    .defined(d => !isNaN(d))
+    .x((d, i) => viz1X(data.dates[i]))
+    .y(d => viz1Y(d));
+
+  var tooltip = d3.select("#viz1")
+    .append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  var tipMouseover = function (d) {
+    var html = "<em>" + d.name + " County</em>";
+    tooltip.html(html)
+      .style("left", (d3.event.pageX - 440) + "px")
+      .style("top", d3.event.pageY + "px")
+      .transition()
+      .duration(200)
+      .style("opacity", 1)
+    const ym = viz1Y.invert(d3.event.layerY);
+    const xm = viz1X.invert(d3.event.layerX);
+    const i1 = d3.bisectLeft(data.dates, xm, 1);
+    const i0 = i1 - 1;
+    const i = xm - data.dates[i0] > data.dates[i1] - xm ? i1 : i0;
+    const s = d;
+    path.attr("stroke", d => d === s ? null : '#ddd').filter(d => d === s).raise();
   }
-  svg.call(hover, path);
-  return svg.node();
 
+  var tipMouseout = function (d) {
+    tooltip.transition()
+      .duration(200)
+      .style("opacity", 0);
+    path.style("mix-blend-mode", "multiply").attr("stroke", null);
+  };
+
+  svg.selectAll("path").remove();
+  svg.select("#viz1YAxis").remove();
+
+  svg.append("g")
+    .call(viz1YAxis);
+
+  const path = svg.append("g")
+    .attr("fill", "none")
+    .attr("stroke", viz1Colors[metric])
+    .attr("stroke-width", 2.5)
+    .attr("opacity", 0.8)
+    .attr("stroke-linejoin", "round")
+    .attr("stroke-linecap", "round")
+    .selectAll("path")
+    .data(data.series)
+    .join("path")
+    .style("mix-blend-mode", "multiply")
+    .attr("d", d => viz1Line(d.values))
+    .on("mouseover", tipMouseover)
+    .on("mouseout", tipMouseout);
 }
 
 
 
+
+
 // VIZ 2 - COUNTY SCATTER PLOT
+// Inspired/adapted from https://observablehq.com/@mbostock/the-wealth-health-of-nations
 function initViz2() {
   d3.json("./data/county_scatter_animated.json")
     .then(function (data) {
@@ -187,7 +305,7 @@ function buildScatter(data, year, metric) {
     .domain([0, .5, 1])
     .interpolator(d3.interpolateRdBu)
 
-  const viz2Radius = d3.scaleSqrt([-3e3, 6e6], [0, viz2Width / 18]);
+  const viz2Radius = d3.scaleSqrt([-3e3, 5e6], [0, viz2Width / 18]);
 
   const viz2Y = d3.scaleLinear([0, 1], [viz2Height - viz2Margin.bottom, viz2Margin.top]);
 
@@ -200,6 +318,7 @@ function buildScatter(data, year, metric) {
   const viz2YAxis = g => g
     .attr("id", "viz2YAxis")
     .attr("transform", `translate(${viz2Margin.left},0)`)
+    .style("font-size", "12px")
     .call(d3.axisLeft(viz2Y).tickFormat(formatPercent))
     .call(g => g.select(".domain").remove())
     .call(g => g.append("text")
@@ -212,6 +331,7 @@ function buildScatter(data, year, metric) {
   var viz2XAxis = g => g
     .attr("id", "viz2xAxis")
     .attr("transform", `translate(0,${viz2Height - viz2Margin.bottom})`)
+    .style("font-size", "12px")
     .call(d3.axisBottom(viz2X).ticks(viz2Width / 80, ",").tickFormat(formatPercent))
     .call(g => g.select(".domain").remove())
     .call(g => g.append("text")
@@ -310,13 +430,14 @@ function updateViz2() {
           .domain([0, .5, 1])
           .interpolator(d3.interpolateRdBu)
 
-        const viz2Radius = d3.scaleSqrt([-3e3, 6e6], [0, viz2Width / 18]);
+        const viz2Radius = d3.scaleSqrt([-3e3, 5e6], [0, viz2Width / 18]);
         const viz2Y = d3.scaleLinear([0, 1], [viz2Height - viz2Margin.bottom, viz2Margin.top]);
         const viz2X = d3.scaleLinear([.4, 1], [viz2Margin.left, viz2Width - viz2Margin.right]);
 
         var viz2XAxis = g => g
           .attr("id", "viz2xAxis")
           .attr("transform", `translate(0,${viz2Height - viz2Margin.bottom})`)
+          .style("font-size", "12px")
           .call(d3.axisBottom(viz2X).ticks(viz2Width / 80, ",").tickFormat(formatPercent))
           .call(g => g.select(".domain").remove())
           .call(g => g.append("text")
@@ -359,7 +480,7 @@ function updateViz2() {
         svg.selectAll("circle").data(dataAt(data, year), d => d.name)
           .each(function (d, i) {
             d3.select(this)
-              .transition().duration(1000)//.delay(2*i)
+              .transition().duration(1000)
               .attr("cx", d => viz2X(d.percwhite))
               .attr("cy", d => viz2Y(d.percdem))
               .attr("r", d => viz2Radius(d.population))
@@ -379,13 +500,14 @@ function updateViz2() {
           .domain([0, .5, 1])
           .interpolator(d3.interpolateRdBu)
 
-        const viz2Radius = d3.scaleSqrt([-3e3, 6e6], [0, viz2Width / 18]);
+        const viz2Radius = d3.scaleSqrt([-3e3, 5e6], [0, viz2Width / 18]);
         const viz2Y = d3.scaleLinear([0, 1], [viz2Height - viz2Margin.bottom, viz2Margin.top]);
         const viz2X = d3.scaleLinear([20, 60], [viz2Margin.left, viz2Width - viz2Margin.right]);
 
         var viz2XAxis = g => g
           .attr("id", "viz2xAxis")
           .attr("transform", `translate(0,${viz2Height - viz2Margin.bottom})`)
+          .style("font-size", "12px")
           .call(d3.axisBottom(viz2X).ticks(viz2Width / 80, ","))
           .call(g => g.select(".domain").remove())
           .call(g => g.append("text")
@@ -467,6 +589,7 @@ function dataAt(data, year) {
 
 
 // VIZ 3 - SEQUENCES SUNBURST
+// inspired/adapted from https://observablehq.com/@kerryrodden/sequences-sunburst
 const hierarchyDict = {
   pdct: "party, district, candidate, type",
   dpct: "district, party, candidate, type",
@@ -487,8 +610,6 @@ const viz3PartyColor = d3.scaleOrdinal()
     "#ff9b4d", "#ff9750", "#ff9454", "#ff9058", "#ff8e5a", "#ff8a5f", "#ff8762",
     "#ff8465"])
   .unknown("gainsboro");
-
-console.log(viz3PartyColor);
 
 const width = 640;
 const radius = width / 2;
@@ -602,8 +723,6 @@ function buildHierarchy(inputData) {
   return root;
 }
 
-//.sort((a, b) => b.value - a.value));
-
 function buildSunburst(plotData) {
   const hierarchyVal = document.getElementById("viz3-hierarchy").value;
   const root = d3.partition().size([2 * Math.PI, radius * radius])(
@@ -652,7 +771,6 @@ function buildSunburst(plotData) {
     .selectAll("path")
     .data(
       root.descendants().filter(d => {
-        //console.log(d);
         return d.depth && d.x1 - d.x0 > 0.001;
       })
     )
